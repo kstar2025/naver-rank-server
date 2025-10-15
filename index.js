@@ -8,36 +8,28 @@ app.use(cors());
 
 app.post("/check-rank", async (req, res) => {
   const { keyword, targetName } = req.body;
-  console.log(`🔍 검색 중: ${keyword}, 타겟: ${targetName}`);
+  console.log(`🔍 검색 중: ${keyword}`);
 
   const searchUrl = `https://search.naver.com/search.naver?ssc=tab.blog.all&sm=tab_jum&query=${encodeURIComponent(keyword)}`;
 
   const browser = await puppeteer.launch({
     headless: "new",
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: ["--no-sandbox", "--disable-setuid-sandbox"]
   });
   const page = await browser.newPage();
 
   try {
     await page.goto(searchUrl, { waitUntil: "domcontentloaded" });
-    await page.waitForTimeout(2000); // 로딩 안정화 대기
+    await page.waitForTimeout(2000);
 
-    // ✅ 네이버 최신 구조 대응 (.name 대신 .blogger)
-    const bloggers = await page.$$eval(".user_info, .blogger", (elements) =>
-      elements
-        .map((el) => {
-          const nameEl = el.querySelector("a.name, .name, .title_area span");
-          return nameEl ? nameEl.textContent.trim() : null;
-        })
-        .filter(Boolean)
+    // 최신 네이버 구조 대응
+    const bloggers = await page.$$eval(".user_info a.name, .name, .blogger", els =>
+      els.map(el => el.textContent.trim())
     );
 
-    // ✅ 순위 계산
     const ranks = [];
     for (let i = 0; i < Math.min(bloggers.length, 10); i++) {
-      if (bloggers[i].includes(targetName)) {
-        ranks.push(i + 1);
-      }
+      if (bloggers[i].includes(targetName)) ranks.push(i + 1);
     }
 
     await browser.close();
@@ -54,6 +46,4 @@ app.get("/", (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
