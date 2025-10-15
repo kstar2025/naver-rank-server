@@ -1,0 +1,10 @@
+{
+  "name": "naver-rank-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "express": "^4.18.2",
+    "puppeteer": "^22.0.0"
+  }
+}
