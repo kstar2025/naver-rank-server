@@ -1,10 +1,18 @@
 {
   "name": "naver-rank-server",
   "version": "1.0.0",
+  "description": "네이버 블로그 순위 확인용 서버",
   "main": "index.js",
   "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
   "dependencies": {
-    "express": "^4.18.2",
-    "puppeteer": "^22.0.0"
+    "express": "^4.19.2",
+    "cors": "^2.8.5",
+    "puppeteer": "^22.10.0"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
