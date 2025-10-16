@@ -1,7 +1,6 @@
 {
   "name": "naver-rank-server",
   "version": "1.0.0",
-  "description": "네이버 블로그 순위 확인용 서버",
   "main": "index.js",
   "type": "module",
   "scripts": {
