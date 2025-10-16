@@ -6,25 +6,36 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+// ✅ 블로그 순위 확인 엔드포인트
 app.post("/check-rank", async (req, res) => {
   const { keyword, targetName } = req.body;
   console.log(`🔍 검색 중: ${keyword}`);
 
   const searchUrl = `https://search.naver.com/search.naver?ssc=tab.blog.all&sm=tab_jum&query=${encodeURIComponent(keyword)}`;
 
-  const browser = await puppeteer.launch({
-    headless: "new",
-    args: ["--no-sandbox", "--disable-setuid-sandbox"]
-  });
-  const page = await browser.newPage();
-
   try {
-    await page.goto(searchUrl, { waitUntil: "domcontentloaded" });
-    await page.waitForTimeout(2000);
+    const browser = await puppeteer.launch({
+      headless: "new",
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-gpu",
+        "--disable-dev-shm-usage",
+      ],
+    });
 
-    // 최신 네이버 구조 대응
-    const bloggers = await page.$$eval(".user_info a.name, .name, .blogger", els =>
-      els.map(el => el.textContent.trim())
+    const page = await browser.newPage();
+    await page.goto(searchUrl, { waitUntil: "domcontentloaded" });
+    await page.waitForTimeout(1500);
+
+    // 🔍 블로거 이름 가져오기
+    const bloggers = await page.$$eval(".user_info, .blogger, .name", (els) =>
+      els
+        .map((el) => {
+          const nameEl = el.querySelector("a.name, span.name, .title_area span");
+          return nameEl ? nameEl.textContent.trim() : null;
+        })
+        .filter(Boolean)
     );
 
     const ranks = [];
@@ -35,12 +46,12 @@ app.post("/check-rank", async (req, res) => {
     await browser.close();
     res.json({ keyword, ranks });
   } catch (error) {
-    await browser.close();
-    console.error("❌ 오류:", error.message);
+    console.error("❌ Puppeteer 오류:", error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
+// ✅ 서버 상태 확인용
 app.get("/", (req, res) => {
   res.send("✅ Naver Rank Server is Running!");
 });
