@@ -3,10 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
-"scripts": {
-  "start": "node index.js",
-  "postinstall": "npx puppeteer install"
-}
+  "scripts": {
+    "start": "node index.js",
+    "postinstall": "npx puppeteer install"
   },
   "dependencies": {
     "express": "^4.19.2",
