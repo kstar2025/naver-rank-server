@@ -6,7 +6,6 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// ✅ 블로그 순위 확인 엔드포인트
 app.post("/check-rank", async (req, res) => {
   const { keyword, targetName } = req.body;
   console.log(`🔍 검색 중: ${keyword}`);
@@ -15,21 +14,24 @@ app.post("/check-rank", async (req, res) => {
 
   try {
     const browser = await puppeteer.launch({
-      headless: "new",
+      headless: true,
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
         "--disable-gpu",
         "--disable-dev-shm-usage",
+        "--disable-extensions",
+        "--disable-background-timer-throttling",
+        "--disable-renderer-backgrounding",
+        "--disable-backgrounding-occluded-windows",
       ],
     });
 
     const page = await browser.newPage();
-    await page.goto(searchUrl, { waitUntil: "domcontentloaded" });
+    await page.goto(searchUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
     await page.waitForTimeout(1500);
 
-    // 🔍 블로거 이름 가져오기
-    const bloggers = await page.$$eval(".user_info, .blogger, .name", (els) =>
+    const bloggers = await page.$$eval(".user_info, .name, .blogger", (els) =>
       els
         .map((el) => {
           const nameEl = el.querySelector("a.name, span.name, .title_area span");
@@ -51,10 +53,7 @@ app.post("/check-rank", async (req, res) => {
   }
 });
 
-// ✅ 서버 상태 확인용
-app.get("/", (req, res) => {
-  res.send("✅ Naver Rank Server is Running!");
-});
+app.get("/", (req, res) => res.send("✅ Naver Rank Server Running!"));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
