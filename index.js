@@ -7,12 +7,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ 루트 테스트용 (Render가 서버 살아있는지 확인)
+// ✅ 루트 헬스체크 (Render가 서버 정상 작동 확인용)
 app.get("/", (req, res) => {
-  res.send("✅ Naver Rank Server is running!");
+  res.send("✅ Naver Rank Server is alive!");
 });
 
-// ✅ 실제 데이터 처리용 POST 엔드포인트
+// ✅ 실제 API 엔드포인트
 app.post("/check-rank", async (req, res) => {
   const { keyword, targetName } = req.body;
   console.log("🔍 요청 받은 키워드:", keyword);
@@ -29,12 +29,10 @@ app.post("/check-rank", async (req, res) => {
     const searchUrl = `https://search.naver.com/search.naver?ssc=tab.blog.all&query=${encodeURIComponent(keyword)}`;
     await page.goto(searchUrl, { waitUntil: "domcontentloaded" });
 
-    // 블로거 이름 추출
     const bloggers = await page.$$eval(".user_info a.name", els =>
       els.map(el => el.textContent.trim())
     );
 
-    // 순위 계산
     const ranks = bloggers
       .map((name, i) => (name.includes(targetName) ? i + 1 : null))
       .filter(v => v && v <= 10);
