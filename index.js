@@ -7,7 +7,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ 루트 헬스체크 (Render가 서버 정상 작동 확인용)
+// ✅ 헬스체크 (Render가 서버 정상 확인용)
 app.get("/", (req, res) => {
   res.send("✅ Naver Rank Server is alive!");
 });
@@ -15,19 +15,21 @@ app.get("/", (req, res) => {
 // ✅ 실제 API 엔드포인트
 app.post("/check-rank", async (req, res) => {
   const { keyword, targetName } = req.body;
-  console.log("🔍 요청 받은 키워드:", keyword);
+  console.log(`🔍 키워드 수신: ${keyword}`);
 
+  let browser;
   try {
-    const browser = await puppeteer.launch({
-      args: chromium.args,
+    browser = await puppeteer.launch({
+      args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox"],
       defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(),
       headless: chromium.headless,
+      ignoreHTTPSErrors: true,
     });
 
     const page = await browser.newPage();
     const searchUrl = `https://search.naver.com/search.naver?ssc=tab.blog.all&query=${encodeURIComponent(keyword)}`;
-    await page.goto(searchUrl, { waitUntil: "domcontentloaded" });
+    await page.goto(searchUrl, { waitUntil: "domcontentloaded", timeout: 20000 });
 
     const bloggers = await page.$$eval(".user_info a.name", els =>
       els.map(el => el.textContent.trim())
@@ -37,12 +39,13 @@ app.post("/check-rank", async (req, res) => {
       .map((name, i) => (name.includes(targetName) ? i + 1 : null))
       .filter(v => v && v <= 10);
 
-    await browser.close();
-
+    console.log(`✅ ${keyword} 순위: ${ranks}`);
     res.json({ keyword, ranks: ranks.length ? ranks : ["없음"] });
   } catch (error) {
-    console.error("❌ 서버 오류:", error);
-    res.status(500).json({ error: error.message });
+    console.error(`❌ ${keyword} 오류:`, error.message);
+    res.status(200).json({ keyword, ranks: ["없음"] }); // ← 실패해도 JSON은 무조건 반환하게 수정
+  } finally {
+    if (browser) await browser.close().catch(() => {});
   }
 });
 
