@@ -9,8 +9,8 @@
   "dependencies": {
     "express": "^4.19.2",
     "cors": "^2.8.5",
-    "puppeteer-core": "^21.5.0",
-    "@sparticuz/chromium": "^119.0.0"
+    "puppeteer-core": "^22.10.0",
+    "@sparticuz/chromium": "^126.0.0"
   },
   "engines": {
     "node": ">=18"
